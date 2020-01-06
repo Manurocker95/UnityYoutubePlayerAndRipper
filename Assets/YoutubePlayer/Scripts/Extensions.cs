@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 using YoutubeExplode.Models.ClosedCaptions;
 using YoutubeExplode.Models.MediaStreams;
 
@@ -77,7 +78,11 @@ namespace YoutubePlayer
         public static string ToSRT(this ClosedCaptionTrack closedCaptionTrack)
         {
             if(closedCaptionTrack == null)
-                throw new ArgumentNullException(nameof(closedCaptionTrack));
+            {
+                Debug.LogWarning("Closed caption track is null ");
+                return "";
+                //throw new ArgumentNullException(nameof(closedCaptionTrack));
+            }
 
             return closedCaptionTrack.Captions.ToSRT();
         }

@@ -13,6 +13,7 @@ namespace YoutubePlayer
         public Environment.SpecialFolder destination;
         private Image downloadProgress;
         private float progress;
+        public bool useDataPath = true;
 
         private void Start()
         {
@@ -31,12 +32,10 @@ namespace YoutubePlayer
 
             Debug.Log("Downloading, please wait...");
 
-            var v = Environment.GetFolderPath(destination);
+            var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/";
 
-#if UNITY_EDITOR_WIN
-            
-            //v = OnOpen(StandaloneFileBrowser.OpenFilePanel(Title, Directory, Extension, Multiselect));
-#endif
+            if (Directory.Exists(v))
+                Directory.CreateDirectory(v);
 
             var videoDownloadTask = youtubePlayer.DownloadVideoAsync(v, null, this);
             var captionsDownloadTask = youtubePlayer.DownloadClosedCaptions();
