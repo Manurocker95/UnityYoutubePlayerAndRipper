@@ -43,7 +43,7 @@ namespace YoutubePlayer
 
             var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/";
 
-            if (Directory.Exists(v))
+            if (!Directory.Exists(v))
                 Directory.CreateDirectory(v);
 
             var link1 = new LinkInfo(youtubePlayer.youtubeUrl);
@@ -91,7 +91,7 @@ namespace YoutubePlayer
 
             var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/";
 
-            if (Directory.Exists(v))
+            if (!Directory.Exists(v))
                 Directory.CreateDirectory(v);
 
             var link1 = new LinkInfo(youtubePlayer.youtubeUrl);
@@ -147,7 +147,7 @@ namespace YoutubePlayer
 
             var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"\Recordings\";
 
-            if (Directory.Exists(v))
+            if (!Directory.Exists(v))
                 Directory.CreateDirectory(v);
 
             var link1 = new LinkInfo(youtubePlayer.youtubeUrl);
@@ -210,7 +210,7 @@ namespace YoutubePlayer
 
             var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"\Recordings\";
 
-            if (Directory.Exists(v))
+            if (!Directory.Exists(v))
                 Directory.CreateDirectory(v);
 
             var source = v;
@@ -250,7 +250,7 @@ namespace YoutubePlayer
                 var bytes = await video.GetBytesAsync();
                 var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/";
 
-                if (Directory.Exists(v))
+                if (!Directory.Exists(v))
                     Directory.CreateDirectory(v);
 
                 var filePath = v + @"\" + video.FullName + ".mp3";
@@ -310,7 +310,7 @@ namespace YoutubePlayer
 
             var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/ExtractedAudio/";
 
-            if (Directory.Exists(v))
+            if (!Directory.Exists(v))
                 Directory.CreateDirectory(v);
 
             try
@@ -319,8 +319,14 @@ namespace YoutubePlayer
                 YoutubePlayer.OnEndDownload.Invoke();
 
                 string filename = Path.GetFileNameWithoutExtension(filePath);
-                //System.Diagnostics.Process.Start(Application.dataPath + "/convert.bat", $@"""{Application.dataPath}/MediaToolkit"" ""{v}{filename}.mp4"" ""{v}{filename}.mp3""");
-                System.Diagnostics.Process p = new System.Diagnostics.Process();
+                string audioname = $"{v}{filename}.mp3";
+                if (File.Exists(audioname))
+                {
+                    File.Delete(audioname);
+                }
+
+                    //System.Diagnostics.Process.Start(Application.dataPath + "/convert.bat", $@"""{Application.dataPath}/MediaToolkit"" ""{v}{filename}.mp4"" ""{v}{filename}.mp3""");
+                    System.Diagnostics.Process p = new System.Diagnostics.Process();
                 System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
 
                 startInfo.CreateNoWindow = false;
@@ -366,7 +372,14 @@ namespace YoutubePlayer
             if (downloadProgress)
                 downloadProgress.fillAmount = progress;
 
-            
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/ExtractedAudio/";
+                if (!Directory.Exists(v))
+                    Directory.CreateDirectory(v);
+
+                System.Diagnostics.Process.Start(Path.GetFullPath(v));
+            }
         }
     }
 }

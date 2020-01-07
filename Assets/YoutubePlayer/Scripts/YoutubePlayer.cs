@@ -53,14 +53,26 @@ namespace YoutubePlayer
         public bool paused = false;
         public Text m_pauseTxt;
         public KeyCode exitKey = KeyCode.Escape;
-        public KeyCode pauseResumeKey = KeyCode.Space;
+        public KeyCode pauseResumeKey = KeyCode.S;
         public KeyCode playkey = KeyCode.Return;
+        public string defaultVideo = "https://www.youtube.com/watch?v=2oRxLgoNpRs";
 
         private void Awake()
         {
-            if (overrideURLWithInputField && !string.IsNullOrEmpty(m_inputField.text))
-                youtubeUrl = m_inputField.text;
+            if (string.IsNullOrEmpty(m_inputField.text))
+            {
+                m_inputField.text = defaultVideo;
+            }
 
+            if (overrideURLWithInputField && !string.IsNullOrEmpty(m_inputField.text))
+            {
+                youtubeUrl = m_inputField.text;
+            }
+            else
+            {
+                youtubeUrl = "";
+            }
+ 
            youtubeClient = new YoutubeClient();
            videoPlayer = GetComponent<VideoPlayer>();
             _slider.value = PlayerPrefs.GetFloat("YoutubeVolume", 1.0f);
@@ -97,7 +109,11 @@ namespace YoutubePlayer
 
         private async void OnEnable()
         {
-            
+            if (string.IsNullOrEmpty(youtubeUrl))
+            {
+                return;
+            }
+
             if (videoPlayer.playOnAwake)
                 await PlayVideoAsync();
         }
@@ -117,6 +133,11 @@ namespace YoutubePlayer
 
         public async void Play()
         {
+            if (string.IsNullOrEmpty(youtubeUrl))
+            {
+                return;
+            }
+
             paused = false;
             await PlayVideoAsync();
         }
@@ -171,6 +192,11 @@ namespace YoutubePlayer
 
         public void Pause()
         {
+            if (string.IsNullOrEmpty(youtubeUrl))
+            {
+                return;
+            }
+
             if (!paused)
             {
                 m_pauseTxt.text = "Resume";

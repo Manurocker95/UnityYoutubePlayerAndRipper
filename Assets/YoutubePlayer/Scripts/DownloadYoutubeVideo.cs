@@ -29,6 +29,11 @@ namespace YoutubePlayer
 
         public async void Download()
         {
+            if (string.IsNullOrEmpty(youtubePlayer.youtubeUrl))
+            {
+                return;
+            }
+
             YoutubePlayer.OnDownloading.Invoke();
 
             try
@@ -37,7 +42,7 @@ namespace YoutubePlayer
 
                 var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/ExtractedVideo";
 
-                if (Directory.Exists(v))
+                if (!Directory.Exists(v))
                     Directory.CreateDirectory(v);
 
                 var videoDownloadTask = youtubePlayer.DownloadVideoAsync(v, null, this);
@@ -73,6 +78,15 @@ namespace YoutubePlayer
         {
             if (downloadProgress)
                 downloadProgress.fillAmount = progress;
+
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/ExtractedVideo/";
+                if (!Directory.Exists(v))
+                    Directory.CreateDirectory(v);
+
+                System.Diagnostics.Process.Start(Path.GetFullPath(v));
+            }
         }
     }
 }
