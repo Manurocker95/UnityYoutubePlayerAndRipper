@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using UnityEngine.Video;
 using YoutubeExplode;
 using YoutubeExplode.Models.ClosedCaptions;
@@ -38,10 +40,21 @@ namespace YoutubePlayer
         private YoutubeClient youtubeClient;
 
         public TMPro.TMP_InputField m_inputField;
+        public static Action OnVideoPlay;
+        public static Action OnVideoLoad;
         public static Action OnDownloading;
         public static Action OnEndDownload;
+        public static Action OnAudioExtracting;
+        public static Action OnEndAudioExtracting;
+        public static Action OnTextClear;
+        public static Action<string> OnErrorShown;
         public bool overrideURLWithInputField = true;
         public UnityEngine.UI.Slider _slider;
+        public bool paused = false;
+        public Text m_pauseTxt;
+        public KeyCode exitKey = KeyCode.Escape;
+        public KeyCode pauseResumeKey = KeyCode.Space;
+        public KeyCode playkey = KeyCode.Return;
 
         private void Awake()
         {
@@ -50,7 +63,36 @@ namespace YoutubePlayer
 
            youtubeClient = new YoutubeClient();
            videoPlayer = GetComponent<VideoPlayer>();
+            _slider.value = PlayerPrefs.GetFloat("YoutubeVolume", 1.0f);
+
             SetVolume();
+
+
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(exitKey))
+            {
+                Application.Quit();
+            }
+
+            if (Input.GetKeyDown(pauseResumeKey))
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                Resume();
+            }
+
+            if (Input.GetKeyDown(playkey))
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                Play();
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            PlayerPrefs.SetFloat("YoutubeVolume", _slider.value);
         }
 
         private async void OnEnable()
@@ -75,6 +117,7 @@ namespace YoutubePlayer
 
         public async void Play()
         {
+            paused = false;
             await PlayVideoAsync();
         }
 
@@ -91,12 +134,17 @@ namespace YoutubePlayer
                 if (overrideURLWithInputField && !string.IsNullOrEmpty(m_inputField.text))
                     youtubeUrl = m_inputField.text;
 
+                OnVideoLoad.Invoke();
+
                 videoUrl = videoUrl ?? youtubeUrl;
                 var videoId = GetVideoId(videoUrl);
                 var streamInfoSet = await youtubeClient.GetVideoMediaStreamInfosAsync(videoId);
                 var streamInfo = streamInfoSet.WithHighestVideoQualitySupported();
                 if (streamInfo == null)
+                {
+                    OnVideoPlay.Invoke();
                     throw new NotSupportedException($"No supported streams in youtube video '{videoId}'");
+                }
 
                 videoPlayer.source = VideoSource.Url;
 
@@ -107,6 +155,7 @@ namespace YoutubePlayer
                 videoPlayer.Play();
                 youtubeUrl = videoUrl;
                 YoutubeVideoStarting?.Invoke(youtubeUrl);
+                OnVideoPlay.Invoke();
             }
             catch (Exception ex)
             {
@@ -115,14 +164,32 @@ namespace YoutubePlayer
             }
         }
 
+        public void Restart()
+        {
+
+        }
+
         public void Pause()
         {
-            videoPlayer.Pause();
+            if (!paused)
+            {
+                m_pauseTxt.text = "Resume";
+                paused = true;
+                videoPlayer.Pause();
+            }
+            else
+            {
+                Resume();
+            }
         }
 
         public void Resume()
         {
+            m_pauseTxt.text = "Pause";
+            paused = false;
+            double time = videoPlayer.time;
             videoPlayer.Play();
+            videoPlayer.time = time;
         }
 
         /// <summary>

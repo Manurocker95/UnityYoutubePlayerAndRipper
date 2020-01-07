@@ -152,7 +152,7 @@ namespace YoutubePlayer
 
             var link1 = new LinkInfo(youtubePlayer.youtubeUrl);
 
-            YoutubePlayer.OnDownloading.Invoke();
+            YoutubePlayer.OnAudioExtracting.Invoke();
 
             var downloader = new YTDownloaderBuilder()
                             .SetExportAudioPath(v) // mandatory
@@ -174,7 +174,7 @@ namespace YoutubePlayer
             downloader.AddDownloadFinishedAction(link1.GUID, (evArgs) =>
             {
                 Debug.Log("DOWNLOAD FINISHED");
-                YoutubePlayer.OnEndDownload.Invoke();
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
             });
             try
             {
@@ -191,9 +191,9 @@ namespace YoutubePlayer
             catch (Exception e)
             {
                 Debug.LogError("Couldn't extract audio because "+e);
-                
-                YoutubePlayer.OnEndDownload.Invoke();
 
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
+                YoutubePlayer.OnErrorShown.Invoke(e.Message);
                 Debug.LogError("Trying other method... ");
                 NewTest();
                 //OldDownload();
@@ -217,6 +217,7 @@ namespace YoutubePlayer
             var youtube = YouTube.Default;
             try
             {
+                YoutubePlayer.OnAudioExtracting.Invoke();
                 var vid = youtube.GetVideo(youtubePlayer.youtubeUrl);
                 var filename =  "_temp_" + vid.FullName;
                 File.WriteAllBytes(source + "_temp_" + vid.FullName, vid.GetBytes());
@@ -233,13 +234,14 @@ namespace YoutubePlayer
             catch (Exception e)
             {
                 Debug.LogError("Trying old method... ");
-               
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
+                YoutubePlayer.OnErrorShown.Invoke(e.Message);
                 OldDownload();
             }
         }
         async void OldDownload()
         {
-            YoutubePlayer.OnDownloading.Invoke();
+            YoutubePlayer.OnAudioExtracting.Invoke();
             var youtube = YouTube.Default;
        
             try
@@ -254,14 +256,15 @@ namespace YoutubePlayer
                 var filePath = v + @"\" + video.FullName + ".mp3";
                 File.WriteAllBytes(filePath, bytes);
 
-                YoutubePlayer.OnEndDownload.Invoke();
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
 
                 Debug.Log($"Audio saved to {Path.GetFullPath(filePath)}");
             }
             catch (Exception e)
             {
                 Debug.Log($"Trying last attempt....");
-                YoutubePlayer.OnEndDownload.Invoke();
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
+                YoutubePlayer.OnErrorShown.Invoke(e.Message);
                 DownloadLastAttempt();
             }
         }
@@ -269,7 +272,7 @@ namespace YoutubePlayer
 
         public async void DownloadLastAttempt()
         {
-            YoutubePlayer.OnDownloading.Invoke();
+            YoutubePlayer.OnAudioExtracting.Invoke();
 
             try
             {
@@ -288,12 +291,13 @@ namespace YoutubePlayer
                     engine.Convert(inputFile, outputFile);
                 }
                 Debug.Log($" Downloaded audio at {source}/{vid.FullName.Replace(".mp4", "")}.mp3");
-                YoutubePlayer.OnEndDownload.Invoke();
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
             }
             catch (Exception e)
             {
                 Debug.LogError($"Trying to download the video "+e);
-                YoutubePlayer.OnEndDownload.Invoke();
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
+                YoutubePlayer.OnErrorShown.Invoke(e.Message);
                 DownloadVideoAndExtract();
             }
         }
@@ -304,7 +308,7 @@ namespace YoutubePlayer
 
             Debug.Log("Downloading, please wait...");
 
-            var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/DownloadAndExtract/";
+            var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/ExtractedAudio/";
 
             if (Directory.Exists(v))
                 Directory.CreateDirectory(v);
@@ -312,8 +316,7 @@ namespace YoutubePlayer
             try
             {
                 var filePath = await youtubePlayer.DownloadVideoAsync(v, null, this);
-
-                Debug.Log("Extracting audio...");
+                YoutubePlayer.OnEndDownload.Invoke();
 
                 string filename = Path.GetFileNameWithoutExtension(filePath);
                 //System.Diagnostics.Process.Start(Application.dataPath + "/convert.bat", $@"""{Application.dataPath}/MediaToolkit"" ""{v}{filename}.mp4"" ""{v}{filename}.mp3""");
@@ -322,24 +325,32 @@ namespace YoutubePlayer
 
                 startInfo.CreateNoWindow = false;
                 startInfo.UseShellExecute = false;
-                startInfo.FileName = Application.dataPath + "/convert.bat";
+                startInfo.FileName = Application.dataPath + "/convert.bat"; // https://www.youtube.com/watch?v=2oRxLgoNpRs
                 startInfo.Arguments = $@"""{Application.dataPath}/MediaToolkit"" ""{v}{filename}.mp4"" ""{v}{filename}.mp3""";
+                startInfo.RedirectStandardOutput = true;
+                startInfo.RedirectStandardInput = true;
+
+
                 p.StartInfo = startInfo;
                 p.Start();
-
+                Debug.Log("Extracting audio...");
+                YoutubePlayer.OnAudioExtracting.Invoke();
                 p.WaitForExit();
                 if (File.Exists(filePath))
                 {
                     Debug.Log("Deleting video file...");
                     File.Delete(filePath);
                 }
-               
-                YoutubePlayer.OnEndDownload.Invoke();
+
+                downloadProgress.fillAmount = 0f;
+                YoutubePlayer.OnEndAudioExtracting.Invoke();
             }
             catch (Exception e)
             {
                 Debug.LogError($"Couldn't save Audio save audio because " + e);
                 YoutubePlayer.OnEndDownload.Invoke();
+                YoutubePlayer.OnAudioExtracting.Invoke();
+                YoutubePlayer.OnErrorShown.Invoke(e.Message);
             }
 
 
@@ -354,6 +365,8 @@ namespace YoutubePlayer
         {
             if (downloadProgress)
                 downloadProgress.fillAmount = progress;
+
+            
         }
     }
 }

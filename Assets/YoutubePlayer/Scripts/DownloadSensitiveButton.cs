@@ -18,6 +18,20 @@ namespace YoutubePlayer
 
             YoutubePlayer.OnDownloading += () => { m_button.interactable = false; };
             YoutubePlayer.OnEndDownload += () => { m_button.interactable = true; };
+
+
+            YoutubePlayer.OnAudioExtracting += () => { m_button.interactable = false; };
+            YoutubePlayer.OnEndAudioExtracting += () => { m_button.interactable = true; };
+        }
+
+        private void OnDestroy()
+        {
+            YoutubePlayer.OnDownloading -= () => { m_button.interactable = false; };
+            YoutubePlayer.OnEndDownload -= () => { m_button.interactable = true; };
+
+
+            YoutubePlayer.OnAudioExtracting -= () => { m_button.interactable = false; };
+            YoutubePlayer.OnEndAudioExtracting -= () => { m_button.interactable = true; };
         }
 
     }

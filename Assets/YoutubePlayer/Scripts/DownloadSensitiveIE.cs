@@ -15,8 +15,11 @@ namespace YoutubePlayer
                 m_inputField = GetComponent<TMPro.TMP_InputField>();
 
 
-            YoutubePlayer.OnDownloading += () => { m_inputField.interactable = false; };
-            YoutubePlayer.OnEndDownload += () => { m_inputField.interactable = true; };
+            YoutubePlayer.OnDownloading -= () => { m_inputField.interactable = false; };
+            YoutubePlayer.OnEndDownload -= () => { m_inputField.interactable = true; };
+
+            YoutubePlayer.OnAudioExtracting -= () => { m_inputField.interactable = false; };
+            YoutubePlayer.OnEndAudioExtracting -= () => { m_inputField.interactable = true; };
         }
     }
 

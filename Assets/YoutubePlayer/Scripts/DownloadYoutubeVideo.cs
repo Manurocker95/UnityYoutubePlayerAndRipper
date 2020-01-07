@@ -31,29 +31,37 @@ namespace YoutubePlayer
         {
             YoutubePlayer.OnDownloading.Invoke();
 
-            Debug.Log("Downloading, please wait...");
-
-            var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/";
-
-            if (Directory.Exists(v))
-                Directory.CreateDirectory(v);
-
-            var videoDownloadTask = youtubePlayer.DownloadVideoAsync(v, null, this);
-            var captionsDownloadTask = youtubePlayer.DownloadClosedCaptions();
-
-            var filePath = await videoDownloadTask;
-            var captionTrack = await captionsDownloadTask;
-            
-            if (extractSRT)
+            try
             {
-                var srtPath = Path.ChangeExtension(filePath, ".srt");
-                File.WriteAllText(srtPath, captionTrack.ToSRT());
+                Debug.Log("Downloading, please wait...");
+
+                var v = (useDataPath ? System.IO.Directory.GetCurrentDirectory() : Environment.GetFolderPath(destination)) + @"/Recordings/ExtractedVideo";
+
+                if (Directory.Exists(v))
+                    Directory.CreateDirectory(v);
+
+                var videoDownloadTask = youtubePlayer.DownloadVideoAsync(v, null, this);
+                var captionsDownloadTask = youtubePlayer.DownloadClosedCaptions();
+
+                var filePath = await videoDownloadTask;
+                var captionTrack = await captionsDownloadTask;
+
+                if (extractSRT)
+                {
+                    var srtPath = Path.ChangeExtension(filePath, ".srt");
+                    File.WriteAllText(srtPath, captionTrack.ToSRT());
+                }
+
+                YoutubePlayer.OnEndDownload.Invoke();
+                downloadProgress.fillAmount = 0f;
+                Debug.Log($"Video saved to {Path.GetFullPath(filePath)}");
             }
-
-
-            YoutubePlayer.OnEndDownload.Invoke();
-
-            Debug.Log($"Video saved to {Path.GetFullPath(filePath)}");
+            catch (Exception e)
+            {
+                YoutubePlayer.OnErrorShown.Invoke(e.Message);
+                YoutubePlayer.OnEndDownload.Invoke();
+            }
+            
         }
 
         public void Report(double value)
