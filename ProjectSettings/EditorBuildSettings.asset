@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/YoutubePlayer/Scenes/Player.unity
+    path: Assets/Player.unity
     guid: 7e885db72e79341f4ba2bfe93f865240
   - enabled: 1
     path: Assets/YoutubePlayer/Scenes/Panoramic.unity

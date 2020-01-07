@@ -41,6 +41,7 @@ namespace YoutubePlayer
         public static Action OnDownloading;
         public static Action OnEndDownload;
         public bool overrideURLWithInputField = true;
+        public UnityEngine.UI.Slider _slider;
 
         private void Awake()
         {
@@ -49,6 +50,7 @@ namespace YoutubePlayer
 
            youtubeClient = new YoutubeClient();
            videoPlayer = GetComponent<VideoPlayer>();
+            SetVolume();
         }
 
         private async void OnEnable()
@@ -56,6 +58,19 @@ namespace YoutubePlayer
             
             if (videoPlayer.playOnAwake)
                 await PlayVideoAsync();
+        }
+
+        public void SetVolume()
+        {
+            if (videoPlayer.audioOutputMode == VideoAudioOutputMode.AudioSource)
+            {
+                AudioSource src = videoPlayer.GetTargetAudioSource(0);
+                src.volume = _slider.value;
+            }
+            else
+            {
+                videoPlayer.SetDirectAudioVolume(0, _slider.value);
+            }
         }
 
         public async void Play()

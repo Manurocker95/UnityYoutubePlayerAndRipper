@@ -14,6 +14,7 @@ namespace YoutubePlayer
         private Image downloadProgress;
         private float progress;
         public bool useDataPath = true;
+        public bool extractSRT;
 
         private void Start()
         {
@@ -43,8 +44,12 @@ namespace YoutubePlayer
             var filePath = await videoDownloadTask;
             var captionTrack = await captionsDownloadTask;
             
-            var srtPath = Path.ChangeExtension(filePath, ".srt");
-            File.WriteAllText(srtPath, captionTrack.ToSRT());
+            if (extractSRT)
+            {
+                var srtPath = Path.ChangeExtension(filePath, ".srt");
+                File.WriteAllText(srtPath, captionTrack.ToSRT());
+            }
+
 
             YoutubePlayer.OnEndDownload.Invoke();
 
